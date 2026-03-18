@@ -1373,7 +1373,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     npcs: [],
     firedEventKeys: [],
     roleTrendHistory: persistedRoleTrendHistory,
-    isZeroFootprint: true, // CLOUD-ONLY: All rendering runs on Huggingface Cloud Server
+    isZeroFootprint: false, // LOCAL DEV: render locally. HF Docker uses stream-server.mjs directly
     isVoiceActive: false,
     remotePlayers: {},
     interactionState: {

@@ -24,7 +24,7 @@ const app = express();
 const httpServer = createServer(app);
 
 function parseAllowedOrigins(raw) {
-  return String(raw || 'http://127.0.0.1:3001,http://localhost:3001,http://127.0.0.1:7860,http://localhost:7860')
+  return String(raw || 'http://127.0.0.1:3001,http://localhost:3001,http://127.0.0.1:7860,http://localhost:7860,https://wrzzzrzr-jetbrain.hf.space,https://huggingface.co')
     .split(',')
     .map((value) => value.trim())
     .filter(Boolean);
@@ -43,6 +43,8 @@ const ALLOWED_COMPUTE_HOSTS = new Set(
 
 function isAllowedOrigin(origin) {
   if (!origin) return true;
+  // In Docker/HF: viewer is served from same origin — always allow
+  if (origin.includes('huggingface.co') || origin.includes('.hf.space')) return true;
   return ALLOWED_ORIGINS.includes(origin);
 }
 

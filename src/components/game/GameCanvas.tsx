@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useState, useCallback } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Html, Sky, KeyboardControls } from '@react-three/drei';
 import { Physics } from '@react-three/rapier';
@@ -14,7 +14,6 @@ import { VisualEffects } from '../3d/effects/VisualEffects';
 import { Player } from '../characters/Player';
 import { RemotePlayer } from '../characters/RemotePlayer';
 import { ErrorBoundary } from 'react-error-boundary';
-import { CloudStreamViewer } from '../cloud/CloudStreamViewer';
 import { MAX_ACTIVE_NPCS } from '../../systems/eventScheduler';
 
 const SceneContent = () => {
@@ -89,28 +88,12 @@ export const GameCanvas = () => {
     const [renderKey, setRenderKey] = useState(0);
     const startGame = useGameStore(state => state.startGame);
     const initSocket = useGameStore(state => state.initSocket);
-    const isZeroFootprint = useGameStore(state => state.isZeroFootprint);
-
-    // Notfall-Lokalmodus wenn Cloud nicht erreichbar
-    const handleLocalRender = useCallback(() => {
-        useGameStore.setState({ isZeroFootprint: false });
-    }, []);
 
     useEffect(() => {
-        // Socket & Game nur initialisieren wenn NICHT Zero-Footprint
-        // Bei Zero-Footprint übernimmt der Cloud-Renderer alles
-        if (!isZeroFootprint) {
-            initSocket();
-            startGame();
-        }
-    }, [isZeroFootprint]);
+        initSocket();
+        startGame();
+    }, []);
 
-    // ☁️ CLOUD-ONLY MODUS: Zeige den Cloud-Stream-Viewer
-    if (isZeroFootprint) {
-        return <CloudStreamViewer onLocalRenderRequested={handleLocalRender} />;
-    }
-
-    // 🖥️ LOKALER MODUS (Notfall / Entwicklung)
     return (
         <ErrorBoundary FallbackComponent={({error}: any) => <div style={{color:'red',fontWeight:'bold'}}>Renderer Error: {error?.message || 'Unknown Error'}</div>}>
         <KeyboardControls map={[
