@@ -197,7 +197,9 @@ function getChromiumArgs(settings) {
     '--enable-gpu',
     '--ignore-gpu-blocklist',
     '--enable-webgl',
-    '--use-angle=d3d11',
+    '--use-gl=egl',
+    '--use-angle=vulkan',
+    '--enable-features=Vulkan,CanvasOopRasterization',
     ...commonArgs
   ];
 }
@@ -271,6 +273,27 @@ app.get('/debug-screenshot', async (req, res) => {
     res.send(buffer);
   } catch (err) {
     res.status(500).send('Screenshot failed: ' + err.message);
+  }
+});
+
+app.get('/api/test-walk', async (req, res) => {
+  if (!page) return res.status(404).send('No Puppeteer page active.');
+  console.log('🚶 Starting autonomous 10s walk proof...');
+  try {
+    // Hold 'W' for movement
+    await page.keyboard.down('KeyW');
+    
+    // Simulate smooth camera pan
+    for (let i = 0; i < 40; i++) {
+      await page.mouse.move(400 + i * 10, 300 + Math.sin(i / 5) * 40);
+      await new Promise(r => setTimeout(r, 250)); // 10 seconds total roughly
+    }
+
+    await page.keyboard.up('KeyW');
+    console.log('🏁 Walk proof finished.');
+    res.json({ ok: true, message: 'Walk sequence completed' });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
   }
 });
 
@@ -944,12 +967,49 @@ async function startCloudRenderer() {
   const rendererInfo = await bootstrapRendererTransport(settings);
   console.log(`✅ Game loaded! Starting WebRTC stream at ${settings.fps} FPS target (${rendererInfo.source})`);
   
-  // 📸 Robust Fallback: Start screenshot capture loop for Socket.IO/MJPEG streaming
-  captureGeneration += 1;
-  isStreaming = true;
-  captureLoop(captureGeneration);
-  
+  // 🚀 CDP Screencast: Ultra-fast frame capture for 60 FPS
+  console.log('🎞️ Starting high-performance CDP Screencast...');
+  const client = await page.target().createCDPSession();
+  await client.send('Page.startScreencast', {
+    format: 'jpeg',
+    quality: settings.jpegQuality,
+    maxWidth: settings.width,
+    maxHeight: settings.height,
+    everyNthFrame: 1
+  });
+
+  client.on('Page.screencastFrame', async ({ data, sessionId }) => {
+    try {
+      const screenshot = Buffer.from(data, 'base64');
+      
+      // Send via WebSocket (binary, low latency)
+      io.volatile.emit('frame', screenshot);
+
+      // MJPEG fallback
+      for (const mClient of mjpegClients) {
+        try {
+          mClient.write(`--frame\r\nContent-Type: image/jpeg\r\nContent-Length: ${screenshot.length}\r\n\r\n`);
+          mClient.write(screenshot);
+          mClient.write('\r\n');
+        } catch (e) { mjpegClients.delete(mClient); }
+      }
+
+      // FPS counter
+      frameCount++;
+      const now = Date.now();
+      if (now - lastFpsTime >= 1000) {
+        currentFps = frameCount;
+        frameCount = 0;
+        lastFpsTime = now;
+      }
+    } finally {
+      // ⚠️ CRITICAL: Must ACK to receive the next frame
+      await client.send('Page.screencastFrameAck', { sessionId }).catch(() => {});
+    }
+  });
+
   io.emit('profile-changed', settings);
+  isStreaming = true;
 }
 
 async function switchProfile(newProfile) {
