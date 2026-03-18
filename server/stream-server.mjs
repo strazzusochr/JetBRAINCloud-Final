@@ -45,6 +45,8 @@ function isAllowedOrigin(origin) {
   if (!origin) return true;
   // In Docker/HF: viewer is served from same origin — always allow
   if (origin.includes('huggingface.co') || origin.includes('.hf.space')) return true;
+  // Also allow the internal renderer port
+  if (origin.includes(`127.0.0.1:${internalPort}`) || origin.includes(`localhost:${internalPort}`)) return true;
   return ALLOWED_ORIGINS.includes(origin);
 }
 
@@ -572,7 +574,8 @@ async function stopCloudRenderer() {
 }
 
 async function bootstrapRendererTransport(settings) {
-  const publicOrigin = `http://127.0.0.1:${PUBLIC_PORT}`;
+  const publicOrigin = `http://localhost:${PUBLIC_PORT}`;
+  console.log(`📡 Internal Socket Origin: ${publicOrigin}`);
   const result = await page.evaluate(async ({ publicOrigin, fps }) => {
     const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
