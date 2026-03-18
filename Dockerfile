@@ -50,6 +50,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libasound2 \
     libpangocairo-1.0-0 \
     libxshmfence1 \
+    libgles2 \
+    libegl1 \
+    libvulkan1 \
+    mesa-vulkan-drivers \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

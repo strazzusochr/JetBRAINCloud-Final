@@ -183,7 +183,7 @@ function getChromiumArgs(settings) {
 
   if (RENDER_BACKEND === 'software') {
     return [
-      '--use-gl=angle',
+      '--use-gl=egl',
       '--use-angle=swiftshader',
       '--disable-gpu',
       ...commonArgs
@@ -589,6 +589,17 @@ async function bootstrapRendererTransport(settings) {
       }
       forceTick();
 
+      // WebGL Health Check
+      try {
+        const canvas = document.createElement('canvas');
+        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+        if (gl) {
+          console.log(`🚀 WebGL Context: ${gl.getParameter(gl.RENDERER)} | ${gl.getParameter(gl.VERSION)}`);
+        } else {
+          console.error('💀 WebGL NOT SUPPORTED IN THIS BROWSER');
+        }
+      } catch (e) { console.error('💀 WebGL Check Error:', e); }
+
       while (performance.now() - start < timeoutMs) {
         const canvases = Array.from(document.querySelectorAll('canvas'));
         const best = canvases
@@ -598,7 +609,7 @@ async function bootstrapRendererTransport(settings) {
           console.log(`✅ Canvas found: ${best.width}x${best.height}`);
           return best;
         }
-        await wait(500);
+        await wait(2000); // Wait longer between checks to give Three.js more time
       }
       throw new Error('No captureable canvas found after 60s');
     }
@@ -895,7 +906,7 @@ async function startCloudRenderer() {
   page.on('pageerror', err => console.error('💀 [PAGE CRASH]', err));
 
   console.log('🌍 Loading game engine...');
-  await page.goto(`http://127.1:${internalPort}`, {
+  await page.goto(`http://localhost:${internalPort}`, {
     waitUntil: ['networkidle2', 'load'],
     timeout: 120000
   });
