@@ -40,6 +40,7 @@
     "express": "^4.22.1",
     "helmet": "^8.1.0",
     "leva": "^0.10.1",
+    "peerjs": "^1.5.5",
     "postprocessing": "^6.38.2",
     "puppeteer": "^24.6.1",
     "react": "^19.2.0",
