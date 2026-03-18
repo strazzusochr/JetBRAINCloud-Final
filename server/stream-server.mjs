@@ -255,7 +255,21 @@ app.get('/health', (req, res) => {
     transportSource: rendererTransportSource,
     internalPort,
     publicPort: PUBLIC_PORT,
+    renderBackend: RENDER_BACKEND
   });
+});
+
+app.get('/debug-screenshot', async (req, res) => {
+  if (!page) {
+    return res.status(404).send('No Puppeteer page active.');
+  }
+  try {
+    const buffer = await page.screenshot({ type: 'png' });
+    res.set('Content-Type', 'image/png');
+    res.send(buffer);
+  } catch (err) {
+    res.status(500).send('Screenshot failed: ' + err.message);
+  }
 });
 
 app.post('/api/profile/:profile', async (req, res) => {
@@ -906,14 +920,15 @@ async function startCloudRenderer() {
   page.on('pageerror', err => console.error('💀 [PAGE CRASH]', err));
 
   console.log('🌍 Loading game engine...');
-  await page.goto(`http://localhost:${internalPort}/?renderer=true`, {
+  await page.goto(`http://127.0.0.1:${internalPort}/?renderer=true`, {
     waitUntil: ['networkidle2', 'load'],
     timeout: 120000
   });
 
   // Wait for Three.js canvas to appear
-  await page.waitForSelector('canvas', { timeout: 30000 }).catch(() => {
-    console.log('⚠️ No canvas found, starting capture anyway');
+  console.log('⏳ Waiting for canvas selector...');
+  await page.waitForSelector('canvas', { timeout: 45000 }).catch(() => {
+    console.log('⚠️ No canvas found after 45s, proceeding with capture attempt');
   });
 
   const rendererInfo = await bootstrapRendererTransport(settings);
