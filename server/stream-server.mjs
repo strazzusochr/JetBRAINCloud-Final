@@ -761,7 +761,9 @@ async function bootstrapRendererTransport(settings) {
       let peer = peers.get(viewerId);
       if (peer) return peer;
 
-      peer = new RTCPeerConnection({ iceServers: [] });
+      peer = new RTCPeerConnection({
+        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+      });
       stream.getTracks().forEach((track) => peer.addTrack(track, stream));
       peer.onicecandidate = (event) => {
         if (event.candidate) {
@@ -1349,7 +1351,9 @@ function getClientHTML() {
       rendererId = nextRendererId;
       closePeer();
 
-      peer = new RTCPeerConnection({ iceServers: [] });
+      peer = new RTCPeerConnection({
+        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+      });
       peer.ontrack = (event) => {
         const [stream] = event.streams;
         if (stream) {
