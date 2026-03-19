@@ -24,7 +24,11 @@ const socketUrl = isRenderer
     ? (window.location.protocol + '//' + window.location.hostname + ':7860') 
     : (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
 
-const socket = io(socketUrl, { autoConnect: false });
+const socket = io(socketUrl, { 
+    autoConnect: false,
+    transports: ['websocket'],
+    upgrade: false
+});
 (window as any).socket = socket;
 
 export interface NPCData {

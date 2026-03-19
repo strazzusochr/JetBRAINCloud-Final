@@ -42,8 +42,8 @@ export const CloudStreamViewer: React.FC = () => {
         console.log('🔌 CloudStreamViewer V3: Verbinde zu', socketUrl);
 
         const socket = io(socketUrl, {
-            transports: ['polling', 'websocket'],
-            upgrade: true,
+            transports: ['websocket'],
+            upgrade: false,
             reconnection: true,
             reconnectionDelay: 1000,
             reconnectionAttempts: Infinity,
