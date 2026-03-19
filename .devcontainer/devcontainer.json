@@ -20,7 +20,11 @@
       "onAutoForward": "notify"
     },
     "7860": {
-      "label": "Stream Server",
+      "label": "Stream Server (Socket.io)",
+      "onAutoForward": "notify"
+    },
+    "3000": {
+      "label": "Production Entry",
       "onAutoForward": "notify"
     }
   },
