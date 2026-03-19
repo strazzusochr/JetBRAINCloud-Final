@@ -9,21 +9,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy-huggingface:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          lfs: true
-
-      - name: 🐳 Push to Huggingface Spaces
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: |
-          git remote add huggingface https://Wrzzzrzr:$HF_TOKEN@huggingface.co/spaces/Wrzzzrzr/JetBRAIN
-          git push --force huggingface main
-
   mirror-gitlab:
     runs-on: ubuntu-latest
     steps:
