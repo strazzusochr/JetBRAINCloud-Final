@@ -102,7 +102,7 @@ jobs:
       - name: Install Trivy
         run: |
           mkdir -p $HOME/bin
-          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b $HOME/bin v0.56.1
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b $HOME/bin v0.69.2
           echo "$HOME/bin" >> $GITHUB_PATH
       - name: Trivy filesystem scan
         run: |
