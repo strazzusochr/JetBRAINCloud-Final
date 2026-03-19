@@ -1399,7 +1399,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         history: [],
     },
     gameState: { 
-        cloudStreamUrl: 'https://wrzzzrzr-jetbrain.hf.space',
+        cloudStreamUrl: 'https://strazzusochr-jetbrainclo-7x393ju171.app.codeanywhere.com/',
         isPlaying: true, isTimePaused: false, inGameTime: persistedInGameTime,
         tensionLevel: getTensionLevelForMinutes(timeToMinutes(persistedInGameTime)),
         timeSpeed: persistedRuntimeSnapshot?.timeSpeed ?? RUNTIME_DEFAULTS.timeSpeed,

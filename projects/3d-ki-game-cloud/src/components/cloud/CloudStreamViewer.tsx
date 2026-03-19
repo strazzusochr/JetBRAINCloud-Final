@@ -16,7 +16,7 @@ export const CloudStreamViewer: React.FC<CloudStreamViewerProps> = ({ streamUrl 
     const socketRef = useRef<any>(null);
     const peerRef = useRef<RTCPeerConnection | null>(null);
 
-    const targetUrl = streamUrl || gameState.cloudStreamUrl || 'https://wrzzzrzr-jetbrain.hf.space';
+    const targetUrl = streamUrl || gameState.cloudStreamUrl || 'https://strazzusochr-jetbrainclo-7x393ju171.app.codeanywhere.com/';
 
     useEffect(() => {
         if (!isZeroFootprint) return;
@@ -27,6 +27,7 @@ export const CloudStreamViewer: React.FC<CloudStreamViewerProps> = ({ streamUrl 
         // Connect to Stream Server
         const socket = io(targetUrl, {
             transports: ['websocket'],
+            upgrade: false,
             auth: { token: 'JETBRAIN_CLIENT_v17' }
         });
         socketRef.current = socket;

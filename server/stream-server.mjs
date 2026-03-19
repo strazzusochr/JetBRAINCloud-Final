@@ -24,7 +24,7 @@ const app = express();
 const httpServer = createServer(app);
 
 function parseAllowedOrigins(raw) {
-  return String(raw || 'http://127.0.0.1:3001,http://localhost:3001,http://127.0.0.1:7860,http://localhost:7860,https://wrzzzrzr-jetbrain.hf.space,https://huggingface.co')
+  return String(raw || 'http://127.0.0.1:3001,http://localhost:3001,http://127.0.0.1:7860,http://localhost:7860,https://strazzusochr-jetbrainclo-7x393ju171.app.codeanywhere.com,https://huggingface.co')
     .split(',')
     .map((value) => value.trim())
     .filter(Boolean);
