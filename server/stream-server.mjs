@@ -52,16 +52,14 @@ function isAllowedOrigin(origin) {
 
 const io = new Server(httpServer, {
   cors: {
-    origin: (origin, callback) => {
-      if (isAllowedOrigin(origin)) {
-        callback(null, true);
-        return;
-      }
-      callback(new Error('origin_denied'));
-    },
-    methods: ['GET', 'POST']
+    origin: true, // Permissive for HF Proxy
+    methods: ['GET', 'POST'],
+    credentials: true
   },
-  maxHttpBufferSize: 1e7 // 10MB for high-fidelity AAA frames
+  maxHttpBufferSize: 1e7,
+  pingTimeout: 60000,
+  pingInterval: 25000,
+  transports: ['websocket', 'polling']
 });
 
 // ─── Internal static server for Puppeteer ───
@@ -490,20 +488,20 @@ io.on('connection', (socket) => {
       if (latestHudState) {
         socket.emit('hud-state', latestHudState);
       }
-      return;
-    }
-
-    viewerSocketIds.add(socket.id);
-    console.log(`[SOCKET] viewerSocketIds after add:`, Array.from(viewerSocketIds));
-    if (rendererSocketId) {
-      socket.emit('renderer-ready', {
-        rendererId: rendererSocketId,
-        transportSource: rendererTransportSource,
-        profile: getStreamSettings().profileKey,
-      });
-    }
-    if (latestHudState) {
-      socket.emit('hud-state', latestHudState);
+    } else if (role === 'viewer') {
+      viewerSocketIds.add(socket.id);
+      socket.join('viewers');
+      console.log(`👥 Viewer joined: ${socket.id}`);
+      if (rendererSocketId) {
+        socket.emit('renderer-ready', {
+          rendererId: rendererSocketId,
+          transportSource: rendererTransportSource,
+          profile: getStreamSettings().profileKey,
+        });
+      }
+      if (latestHudState) {
+        socket.emit('hud-state', latestHudState);
+      }
     }
   });
 
@@ -632,7 +630,8 @@ async function captureLoop(generation) {
     });
 
     // Send via WebSocket (binary, low latency)
-    io.volatile.emit('frame', screenshot);
+    // Non-volatile to ensure delivery on jittery HF proxy
+    io.to('viewers').emit('frame', screenshot);
 
     // MJPEG fallback
     for (const client of mjpegClients) {
@@ -1373,16 +1372,11 @@ function getClientHTML() {
     const fpsEl = document.getElementById('fps');
     const socket = io(window.location.origin, {
       path: '/socket.io',
-      transports: ['polling', 'websocket'],
-      upgrade: true,
-      rememberUpgrade: false,
+      transports: ['websocket', 'polling'],
       reconnection: true,
-      reconnectionAttempts: Infinity,
-      reconnectionDelay: 500,
-      reconnectionDelayMax: 3000,
-      timeout: 20000,
-      forceNew: false,
-      withCredentials: false,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 1000,
+      timeout: 30000,
     });
     const buttons = Array.from(document.querySelectorAll('.qbtn'));
     const remoteHud = document.getElementById('remoteHud');
