@@ -50,6 +50,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpangocairo-1.0-0 \
     libegl1-mesa \
     libgles2-mesa \
+    libvulkan1 \
     xvfb \
     xdg-utils \
     && rm -rf /var/lib/apt/lists/*
@@ -61,9 +62,9 @@ ENV NODE_OPTIONS="--max-old-space-size=4096"
 ENV PORT=7860
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
-# ⚡ Software-Rendering (SwiftShader) — kein GPU nötig
-ENV RENDER_BACKEND=software
-ENV STREAM_PROFILE=low
+# ⚡ Auto-Scaling Backend (GPU if available, else SwiftShader)
+ENV RENDER_BACKEND=auto
+ENV STREAM_PROFILE=aaa
 ENV HEADLESS_MODE=new
 
 EXPOSE 7860

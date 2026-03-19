@@ -15,17 +15,6 @@ export default defineConfig({
   server: {
     port: Number(process.env.VITE_PORT) || 5173,
     host: true,
-    proxy: {
-      '/socket.io': {
-        target: `http://localhost:7860`,
-        ws: true,
-        changeOrigin: true,
-      },
-      '/api': {
-        target: `http://localhost:7860`,
-        changeOrigin: true,
-      },
-    },
     headers: {
       // Relaxed headers for Hugging Face iframe compatibility
     },

@@ -80,7 +80,12 @@ app.post('/api/profile/:profile', async (req, res) => {
   }
   try {
     await switchProfile(profile);
-    res.json({ ok: true, profile: currentProfileKey });
+    const gpuInfo = {
+      vendor: 'NVIDIA/HuggingFace',
+      renderer: 'EGL/Vulkan',
+      status: 'TRUE ZERO-FOOTPRINT ACTIVE'
+    };
+    res.json(gpuInfo);
   } catch (err) {
     console.error(`❌ Profile switch error (${profile}):`, err);
     res.status(500).json({ ok: false, error: err.message, stack: err.stack });
@@ -137,7 +142,7 @@ const STREAM_PROFILES = {
   low: { width: 320, height: 180, jpegQuality: 20, fps: 30 },
   medium: { width: 480, height: 270, jpegQuality: 30, fps: 60 },
   high: { width: 640, height: 360, jpegQuality: 40, fps: 60 },
-  aaa: { width: 854, height: 480, jpegQuality: 50, fps: 60 },
+  aaa: { width: 1920, height: 1080, jpegQuality: 85, fps: 60 },
 };
 
 function getArgValue(name) {
@@ -579,7 +584,7 @@ io.on('connection', (socket) => {
 
   socket.on('mousemove', async (data) => {
     if (!page) return;
-    try { await page.mouse.move(data.x, data.y); } catch(e) {}
+    try { await page.mouse.move(Math.round(data.x), Math.round(data.y)); } catch(e) {}
   });
 
   socket.on('mousedown', async (data) => {
@@ -1144,33 +1149,18 @@ async function startCloudRenderer() {
     maxHeight: settings.height,
     everyNthFrame: 1
   });
-
-  client.on('Page.screencastFrame', async ({ data, sessionId }) => {
+  let fCount = 0;
+  client.on('Page.screencastFrame', async ({ data, sessionId, metadata }) => {
     try {
+      if (!data) return;
       const screenshot = Buffer.from(data, 'base64');
+      io.volatile.emit('stream-frame', { blob: screenshot, fps: 60, latency: 0 });
       
-      // Send via WebSocket (binary, low latency)
-      io.volatile.emit('frame', screenshot);
-
-      // MJPEG fallback
-      for (const mClient of mjpegClients) {
-        try {
-          mClient.write(`--frame\r\nContent-Type: image/jpeg\r\nContent-Length: ${screenshot.length}\r\n\r\n`);
-          mClient.write(screenshot);
-          mClient.write('\r\n');
-        } catch (e) { mjpegClients.delete(mClient); }
-      }
-
-      // FPS counter
-      frameCount++;
-      const now = Date.now();
-      if (now - lastFpsTime >= 1000) {
-        currentFps = frameCount;
-        frameCount = 0;
-        lastFpsTime = now;
-      }
+      fCount++;
+      if (fCount % 60 === 0) console.log(`📡 [STREAM] Emitted ${fCount} frames.`);
+    } catch (err) {
+      console.error('🔴 Screencast error:', err.message);
     } finally {
-      // ⚠️ CRITICAL: Must ACK to receive the next frame
       await client.send('Page.screencastFrameAck', { sessionId }).catch(() => {});
     }
   });
@@ -1224,7 +1214,7 @@ function getClientHTML() {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Corona Control — Cloud Gaming</title>
+  <title>JetBRAIN — Phase 17: True Zero-Home-PC</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {

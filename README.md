@@ -7,6 +7,8 @@ sdk: docker
 app_port: 7860
 pinned: true
 license: mit
+python_version: "3.10"
+gpu: any
 ---
 
 # 🎯 JetBRAIN — Corona Control Ultimate (Cloud Gaming)
