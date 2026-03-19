@@ -5,7 +5,7 @@
 # ══════════════════════════════════════════════════════════════
 
 # ---- Builder: Build Frontend Assets ----
-FROM node:18-slim AS builder
+FROM node:22-bookworm-slim AS builder
 
 WORKDIR /app
 
@@ -22,10 +22,9 @@ RUN npm run build
 
 # ════════════════════════════════════════════════════════════
 # Runtime: CPU + SwiftShader (WebGL via Software)
-# HuggingFace Free-Tier hat KEINE GPU — SwiftShader ist der
-# einzige Weg, Three.js in einer CPU-Docker-Umgebung zu rendern.
+# Modern Node 22 environment for better security and performance.
 # ════════════════════════════════════════════════════════════
-FROM node:18-slim AS runner
+FROM node:22-bookworm-slim AS runner
 
 # Chromium + X11 Dependencies für Headless Rendering
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -59,7 +58,7 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NODE_OPTIONS="--max-old-space-size=4096"
-ENV PORT=7860
+ENV PORT=3000
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 # ⚡ Auto-Scaling Backend (GPU if available, else SwiftShader)
@@ -67,7 +66,7 @@ ENV RENDER_BACKEND=auto
 ENV STREAM_PROFILE=aaa
 ENV HEADLESS_MODE=new
 
-EXPOSE 7860
+EXPOSE 3000
 
 # Relevante Dateien kopieren
 COPY --from=builder /app/dist ./dist
@@ -75,10 +74,9 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/server ./server
 
-# Hugging Face Spaces brauchen nonroot User
-USER root
-RUN chown -R 1000:1000 /app
-USER 1000
+# Standard non-root user (node user from official image)
+RUN chown -R node:node /app
+USER node
 
 # ☁️ Start: xvfb für virtuelles Display + SwiftShader WebGL
 CMD ["xvfb-run", "--server-args=-screen 0 1920x1080x24 -ac", "node", "server/stream-server.mjs"]
