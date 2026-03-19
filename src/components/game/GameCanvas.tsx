@@ -62,8 +62,8 @@ const SceneContent = () => {
 
     return (
         <>
-            <color attach="background" args={[bgColor]} />
-            <Sky sunPosition={sunPos} />
+            <color attach="background" args={['#000000']} />
+            {!isRenderer && <Sky sunPosition={sunPos} />}
             <ambientLight intensity={ambientIntensity} />
             <directionalLight
                 position={sunPos}

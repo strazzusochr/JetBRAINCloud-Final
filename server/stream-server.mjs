@@ -134,10 +134,10 @@ app.get('/', (req, res) => {
 });
 
 const STREAM_PROFILES = {
-  low: { width: 960, height: 540, jpegQuality: 35, fps: 24 },
-  medium: { width: 1280, height: 720, jpegQuality: 60, fps: 30 },
-  high: { width: 1600, height: 900, jpegQuality: 75, fps: 45 },
-  aaa: { width: 1920, height: 1080, jpegQuality: 85, fps: 60 },
+  low: { width: 320, height: 180, jpegQuality: 20, fps: 30 },
+  medium: { width: 480, height: 270, jpegQuality: 30, fps: 60 },
+  high: { width: 640, height: 360, jpegQuality: 40, fps: 60 },
+  aaa: { width: 854, height: 480, jpegQuality: 50, fps: 60 },
 };
 
 function getArgValue(name) {

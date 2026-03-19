@@ -3,18 +3,11 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useGameStore } from '../../stores/gameStore';
 import { workerManager } from '../../managers/WorkerManager';
-import { lodManager } from '../../managers/LODManager';
+import { lodManager as lodManagerInstance } from '../../managers/LODManager';
 import { NPC_COLORS } from '../../systems/eventScheduler';
 
 /**
- * InstancedHumanoid V4 — FARBIGE NPCs + CPU-OPTIMIERT
- * 
- * Fixes:
- * 1. NPC-Farben nach Typ: Polizei=Blau, Demo=Orange, Zivi=Grau
- * 2. CPU-freundliche Geometrien (keine Subdivision!)
- * 3. Proper InstanceColor initialization
- * 4. LOD-Cache alle 3 Frames
- * 5. MeshLambertMaterial (leichter als PhysicalMaterial)
+ * InstancedHumanoid V4.1 — PERFORMANCE-OVERDRIVE (60 FPS CLOUD FIX)
  */
 
 const COLOR_CACHE: Record<string, THREE.Color> = {};
@@ -34,9 +27,10 @@ function createLODGeometry(lod: number): THREE.BufferGeometry {
 }
 
 const MAX = 250;
+const isRendererGlobal = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('renderer') === 'true';
 
-export const InstancedHumanoid = () => {
-
+export const InstancedHumanoid: React.FC = () => {
+    const { camera } = useThree();
     
     const lod0Ref = useRef<THREE.InstancedMesh>(null);
     const lod1Ref = useRef<THREE.InstancedMesh>(null);
@@ -44,7 +38,17 @@ export const InstancedHumanoid = () => {
     const lod3Ref = useRef<THREE.InstancedMesh>(null);
     const lod4Ref = useRef<THREE.InstancedMesh>(null);
     const auraRef = useRef<THREE.InstancedMesh>(null);
+
+    const refs = useMemo(() => [lod0Ref, lod1Ref, lod2Ref, lod3Ref, lod4Ref], []);
     
+    const geometries = useMemo(() => [
+        createLODGeometry(0),
+        createLODGeometry(1),
+        createLODGeometry(2),
+        createLODGeometry(3),
+        createLODGeometry(4),
+    ], []);
+
     const temp = useMemo(() => new THREE.Object3D(), []);
     const hidden = useMemo(() => {
         const o = new THREE.Object3D();
@@ -54,36 +58,35 @@ export const InstancedHumanoid = () => {
         return o.matrix.clone();
     }, []);
 
-    const geos = useMemo(() => [
-        createLODGeometry(0),
-        createLODGeometry(1),
-        createLODGeometry(2),
-        createLODGeometry(3),
-        createLODGeometry(4),
-    ], []);
+    // Load texture only if not in renderer mode
+    const texture = useMemo(() => {
+        if (isRendererGlobal) return null;
+        const loader = new THREE.TextureLoader();
+        return loader.load('/textures/humanoid_texture.png');
+    }, []);
 
-    const baseMat = useMemo(() => new THREE.MeshLambertMaterial({ 
-        color: 0xffffff,
-    }), []);
+    const baseMat = useMemo(() => new THREE.MeshStandardMaterial({ 
+        color: isRendererGlobal ? "#7a7a7a" : "white",
+        roughness: isRendererGlobal ? 1 : 0.7,
+        metalness: 0,
+        map: isRendererGlobal ? null : texture,
+    }), [texture]);
 
     const auraGeo = useMemo(() => new THREE.SphereGeometry(0.6, 6, 6), []);
     const auraMat = useMemo(() => new THREE.MeshBasicMaterial({ 
-        transparent: true, 
-        opacity: 0.15,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending
+        color: '#00ffff',
+        transparent: true,
+        opacity: 0.2,
+        wireframe: true
     }), []);
 
     const frameCounter = useRef(0);
-    const lodCache = useRef<number[]>(new Array(MAX).fill(4));
 
     // Initialize instanceColor buffers on mount
     useEffect(() => {
-        const refs = [lod0Ref, lod1Ref, lod2Ref, lod3Ref, lod4Ref];
+        const white = new THREE.Color(0xffffff);
         refs.forEach((ref) => {
             if (ref.current) {
-                // Force create instanceColor by setting first instance
-                const white = new THREE.Color(0xffffff);
                 for (let i = 0; i < MAX; i++) {
                     ref.current.setColorAt(i, white);
                 }
@@ -93,7 +96,6 @@ export const InstancedHumanoid = () => {
             }
         });
         if (auraRef.current) {
-            const white = new THREE.Color(0xffffff);
             for (let i = 0; i < MAX; i++) {
                 auraRef.current.setColorAt(i, white);
             }
@@ -101,18 +103,15 @@ export const InstancedHumanoid = () => {
                 auraRef.current.instanceColor.needsUpdate = true;
             }
         }
-    }, []);
+    }, [refs]);
 
-    const refs = [lod0Ref, lod1Ref, lod2Ref, lod3Ref, lod4Ref];
-
-    useFrame(({ camera }) => {
+    useFrame(() => {
         if (refs.some(r => !r.current) || !auraRef.current) return;
         
-        const isRenderer = new URLSearchParams(window?.location?.search).get('renderer') === 'true';
         frameCounter.current++;
-        // 🚀 Im Cloud-Renderer EXTREM-Update (alle 60 Frames = 1x Sekunde bei 60 FPS Video)
-        const lodUpdateFrequency = isRenderer ? 60 : 3;
-        const doLodUpdate = frameCounter.current % lodUpdateFrequency === 0;
+        // 🚀 Cloud-Renderer Update-Rate (alle 60 Frames = absolute CPU Ersparnis)
+        const lodUpdateFrequency = isRendererGlobal ? 60 : 3;
+        const doUpdate = frameCounter.current % lodUpdateFrequency === 0;
         
         const npcs = useGameStore.getState().npcs;
         const buffer = workerManager.latestNPCBuffer;
@@ -136,23 +135,21 @@ export const InstancedHumanoid = () => {
             let lod: number;
             const distSq = (x - camera.position.x) ** 2 + (y - camera.position.y) ** 2 + (z - camera.position.z) ** 2;
             
-            if (isRenderer) {
-                // 💀 Cloud-Brutal-LOD: Über 3m Distanz wird sofort auf LOD 3 (Cylinder) geschaltet
-                if (distSq > 9) lod = 3; 
-                else if (distSq > 25) lod = 4;
-                else lod = 2; // Minimal LOD 2 (Low-Poly Capsule)
-            } else if (doLodUpdate) {
-                lod = lodManager.getLODLevel(Math.sqrt(distSq));
+            if (isRendererGlobal) {
+                if (distSq > 16) lod = 4; // Box über 4m
+                else if (distSq > 4) lod = 3; // Cylinder über 2m
+                else lod = 2; // Low-Poly Capsule nah
+            } else if (doUpdate) {
+                lod = lodManagerInstance.getLODLevel(Math.sqrt(distSq));
             } else {
-                lod = 0; 
+                lod = 2; // Default Low-Poly
             }
 
-            // High-Detail Budget Balancing (Skip in Cloud-Renderer)
-            if (!isRenderer) {
+            if (!isRendererGlobal) {
                 if (lod === 0) lod0Count++;
                 if (lod === 1) lod1Count++;
-                if (lod === 0 && lod0Count > 80) lod = 1;
-                if (lod === 1 && lod1Count > 150) lod = 2;
+                if (lod === 0 && lod0Count > 60) lod = 1;
+                if (lod === 1 && lod1Count > 100) lod = 2;
             }
             
             temp.position.set(x, y, z);
@@ -163,14 +160,12 @@ export const InstancedHumanoid = () => {
             const idx = lodCounts[lod];
             targetRef.setMatrixAt(idx, temp.matrix);
             
-            // NPC-Farbe nach Typ
             const color = COLOR_CACHE[npc.type] || DEFAULT_COLOR;
             targetRef.setColorAt(idx, color);
             
             lodCounts[lod]++;
 
-            // 🚫 Keine Auren im Cloud-Renderer (spart 250 Instanzen/Updates)
-            if (!isRenderer && lod < 2 && auraCount < MAX) {
+            if (!isRendererGlobal && lod < 2 && auraCount < MAX) {
                 temp.position.set(x, y - 0.5, z);
                 temp.scale.set(1, 0.15, 1);
                 temp.updateMatrix();
@@ -180,6 +175,7 @@ export const InstancedHumanoid = () => {
             }
         }
 
+        // Hide unused instances
         refs.forEach((ref, l) => {
             const mesh = ref.current!;
             for (let i = lodCounts[l]; i < MAX; i++) {
@@ -198,15 +194,15 @@ export const InstancedHumanoid = () => {
         if (auraRef.current.instanceColor) auraRef.current.instanceColor.needsUpdate = true;
     });
 
-    const isRenderer = new URLSearchParams(window?.location?.search).get('renderer') === 'true';
+    const isRenderer = isRendererGlobal;
 
     return (
         <>
-            <instancedMesh ref={lod0Ref} args={[geos[0], baseMat, MAX]} castShadow={!isRenderer} receiveShadow={!isRenderer} />
-            <instancedMesh ref={lod1Ref} args={[geos[1], baseMat, MAX]} castShadow={!isRenderer} receiveShadow={!isRenderer} />
-            <instancedMesh ref={lod2Ref} args={[geos[2], baseMat, MAX]} receiveShadow={!isRenderer} />
-            <instancedMesh ref={lod3Ref} args={[geos[3], baseMat, MAX]} receiveShadow={!isRenderer} />
-            <instancedMesh ref={lod4Ref} args={[geos[4], baseMat, MAX]} receiveShadow={!isRenderer} />
+            <instancedMesh ref={lod0Ref} args={[geometries[0], baseMat, MAX]} castShadow={!isRenderer} receiveShadow={!isRenderer} />
+            <instancedMesh ref={lod1Ref} args={[geometries[1], baseMat, MAX]} castShadow={!isRenderer} receiveShadow={!isRenderer} />
+            <instancedMesh ref={lod2Ref} args={[geometries[2], baseMat, MAX]} receiveShadow={!isRenderer} />
+            <instancedMesh ref={lod3Ref} args={[geometries[3], baseMat, MAX]} receiveShadow={!isRenderer} />
+            <instancedMesh ref={lod4Ref} args={[geometries[4], baseMat, MAX]} receiveShadow={!isRenderer} />
             <instancedMesh ref={auraRef} args={[auraGeo, auraMat, MAX]} />
         </>
     );
