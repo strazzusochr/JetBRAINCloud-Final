@@ -48,11 +48,13 @@ Erstellung eines voll funktionsfähigen, taktischen 3D-Web-Games mit maximaler G
 
 ## 📝 FORTSCHRITT LOG
 
-### 🚀 PHASE 12: 60 FPS AAA CLOUD-TURBO (2026-03-19, 03:15)
-- [x] **CDP Screencast**: Implementierung von `Page.startScreencast` für latenzfreies Streaming. (ERFOLGREICH)
-- [x] **FPS-Garantie**: Optimierung der Three.js Schleife (60 FPS Target) durch adaptive Schatten und LOD-Drosselung. (ERFOLGREICH)
-- [x] **Binary-Burst**: Binärer Frame-Transport via Socket.IO aktiv.
-- [x] **Shadow-Strip**: Schatten-Reduzierung im Cloud-Modus auf 256x256 für maximale Performance bei AAA-Optik.
+### 🚀 PHASE 12.1: 60 FPS NOTFALL-RETTUNG (2026-03-19, 03:25)
+- [!] **Rückschlag**: 1 RENDER FPS auf HF CPU bei 250 NPCs. CPU-Overload verhindert Video-Stream.
+- [ ] **Brutal-LOD**: Erzwingen von LOD 3/4 (Boxen) im Cloud-Renderer für alle NPCs > 5m Distanz.
+- [ ] **Shadow-Kill**: Schatten im Cloud-Modus permanent deaktiviert (0% Schatten-Last).
+- [ ] **Downscale-Turbo**: Internes Rendering auf 360p (DPR 0.4) + CDP Screencast mit 30% Qualität.
+- [ ] **Client-Upscale**: Viewer-CSS für scharfes Upscaling optimieren.
+
 
 
 

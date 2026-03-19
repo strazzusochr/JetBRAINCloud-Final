@@ -134,19 +134,26 @@ export const InstancedHumanoid = () => {
             }
 
             let lod: number;
-            if (doLodUpdate) {
-                const dist = Math.sqrt((x - camera.position.x) ** 2 + (y - camera.position.y) ** 2 + (z - camera.position.z) ** 2);
-                lod = lodManager.getLODLevel(dist);
+            const distSq = (x - camera.position.x) ** 2 + (y - camera.position.y) ** 2 + (z - camera.position.z) ** 2;
+            
+            if (isRenderer) {
+                // 💀 Cloud-Brutal-LOD: Über 3m Distanz wird sofort auf LOD 3 (Cylinder) geschaltet
+                if (distSq > 9) lod = 3; 
+                else if (distSq > 25) lod = 4;
+                else lod = 2; // Minimal LOD 2 (Low-Poly Capsule)
+            } else if (doLodUpdate) {
+                lod = lodManager.getLODLevel(Math.sqrt(distSq));
             } else {
-                lod = 0; // Standardmäßig LOD 0 für Testzwecke
+                lod = 0; 
             }
 
-            // High-Detail Budget Balancing
-            if (lod === 0) lod0Count++;
-            if (lod === 1) lod1Count++;
-
-            if (lod === 0 && lod0Count > 80) lod = 1;
-            if (lod === 1 && lod1Count > 150) lod = 2;
+            // High-Detail Budget Balancing (Skip in Cloud-Renderer)
+            if (!isRenderer) {
+                if (lod === 0) lod0Count++;
+                if (lod === 1) lod1Count++;
+                if (lod === 0 && lod0Count > 80) lod = 1;
+                if (lod === 1 && lod1Count > 150) lod = 2;
+            }
             
             temp.position.set(x, y, z);
             temp.scale.set(1, 1, 1);
@@ -162,7 +169,8 @@ export const InstancedHumanoid = () => {
             
             lodCounts[lod]++;
 
-            if (lod < 2 && auraCount < MAX) {
+            // 🚫 Keine Auren im Cloud-Renderer (spart 250 Instanzen/Updates)
+            if (!isRenderer && lod < 2 && auraCount < MAX) {
                 temp.position.set(x, y - 0.5, z);
                 temp.scale.set(1, 0.15, 1);
                 temp.updateMatrix();

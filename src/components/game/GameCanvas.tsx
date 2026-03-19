@@ -56,7 +56,9 @@ const SceneContent = () => {
     }, [isPlaying]);
 
     const isRenderer = new URLSearchParams(window?.location?.search).get('renderer') === 'true';
-    const shadowRes = isRenderer ? 256 : 1024;
+    // 💀 Brutal-Performance: Keine Schatten im Cloud-Renderer für 60 FPS
+    const castShadows = !isRenderer;
+    const shadowRes = 256;
 
     return (
         <>
@@ -66,7 +68,7 @@ const SceneContent = () => {
             <directionalLight
                 position={sunPos}
                 intensity={sunIntensity}
-                castShadow={true}
+                castShadow={castShadows}
                 shadow-mapSize={[shadowRes, shadowRes]}
                 shadow-camera-left={-100}
                 shadow-camera-right={100}
@@ -121,11 +123,11 @@ export const GameCanvas = () => {
 
     const isRenderer = new URLSearchParams(window?.location?.search).get('renderer') === 'true';
     const streamProfile = useGameStore.getState().streamProfile || 'medium';
-    const useShadows = streamProfile === 'aaa' || streamProfile === 'high';
+    const useShadows = !isRenderer && (streamProfile === 'aaa' || streamProfile === 'high');
     const useAntialias = streamProfile !== 'low' && !isRenderer;
     
-    // 🚀 Performance-Turbo: Cloud-Renderer nutzt niedrigeres DPR für 60 FPS Target
-    const dpr = isRenderer ? 0.75 : (streamProfile === 'aaa' ? 1.25 : window.devicePixelRatio);
+    // 🚀 Performance-Brutal-Turbo: 360p intern für 60 FPS Cloud-Streaming
+    const dpr = isRenderer ? 0.4 : (streamProfile === 'aaa' ? 1.25 : window.devicePixelRatio);
 
     return (
         <ErrorBoundary FallbackComponent={({error}: any) => <div style={{color:'red',fontWeight:'bold'}}>Renderer Error: {error?.message || 'Unknown Error'}</div>}>
@@ -142,10 +144,10 @@ export const GameCanvas = () => {
                 gl={{
                     antialias: useAntialias,
                     powerPreference: "high-performance",
-                    precision: isRenderer ? "mediump" : "highp",
-                    stencil: !isRenderer,
+                    precision: isRenderer ? "lowp" : "highp",
+                    stencil: false,
                     depth: true,
-                    logarithmicDepthBuffer: true,
+                    logarithmicDepthBuffer: !isRenderer,
                     preserveDrawingBuffer: true
                 }}
                 onCreated={({ gl }) => {

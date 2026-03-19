@@ -621,12 +621,12 @@ async function setupScreencast() {
   try {
     cdpSession = await page.target().createCDPSession();
     
-    // Start screencast at 60fps target
+    // 🚀 Performance-Brutal: 360p Screencast für 60 FPS Video-Deliverance
     await cdpSession.send('Page.startScreencast', {
       format: 'jpeg',
-      quality: currentProfileKey === 'aaa' ? 60 : 35,
-      maxWidth: 960,
-      maxHeight: 540,
+      quality: 30,
+      maxWidth: 640,
+      maxHeight: 360,
       everyNthFrame: 1
     });
 
