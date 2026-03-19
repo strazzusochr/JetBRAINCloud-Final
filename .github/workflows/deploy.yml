@@ -21,7 +21,7 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          git remote add huggingface https://Wrzzzrzr:${{ secrets.HF_TOKEN }}@huggingface.co/spaces/Wrzzzrzr/JetBRAIN
+          git remote add huggingface https://Wrzzzrzr:$HF_TOKEN@huggingface.co/spaces/Wrzzzrzr/JetBRAIN
           git push --force huggingface main
 
   mirror-gitlab:
@@ -35,5 +35,5 @@ jobs:
         env:
           GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
         run: |
-          git remote add gitlab https://strazzusochr:${{ secrets.GITLAB_TOKEN }}@gitlab.com/strazzusochr/jetbrain.git
+          git remote add gitlab https://strazzusochr:$GITLAB_TOKEN@gitlab.com/strazzusochr/jetbrain.git
           git push --force gitlab main
