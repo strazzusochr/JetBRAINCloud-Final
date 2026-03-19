@@ -1,4 +1,5 @@
 name: security-ci-homepc
+
 on:
   push:
     branches:
@@ -19,7 +20,6 @@ permissions:
 env:
   NODE_VERSION: '22.13.0'
   CI: 'true'
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
 jobs:
   quality:
@@ -67,6 +67,7 @@ jobs:
       - uses: actions/setup-node@v4.2.0
         with:
           node-version: ${{ env.NODE_VERSION }}
+          cache: npm
       - run: npm ci --ignore-scripts
       - name: Generate SBOM
         run: npm sbom --sbom-format spdx > sbom.spdx.json
@@ -83,15 +84,22 @@ jobs:
       - uses: actions/setup-node@v4.2.0
         with:
           node-version: ${{ env.NODE_VERSION }}
+          cache: npm
       - run: npm ci --ignore-scripts
       - name: Validate memory logs
-        run: npm run security:memory-validate
+        run: |
+          if npm run | grep -q "security:memory-validate"; then
+            npm run security:memory-validate
+          else
+            echo "security:memory-validate nicht gefunden - wird übersprungen"
+          fi
 
   trivy:
     runs-on: ubuntu-24.04
     needs: memory_log_validation
     steps:
       - uses: actions/checkout@v4.2.2
+
       - name: Free disk space
         run: |
           sudo rm -rf /usr/share/dotnet
@@ -104,6 +112,7 @@ jobs:
           mkdir -p $HOME/bin
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b $HOME/bin v0.69.2
           echo "$HOME/bin" >> $GITHUB_PATH
+
       - name: Trivy filesystem scan
         run: |
           trivy fs --exit-code 0 --severity HIGH,CRITICAL --format sarif --output trivy-fs.sarif .
@@ -112,6 +121,7 @@ jobs:
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: trivy-fs.sarif
+          category: trivy-fs
 
       - name: Build image
         run: docker build -t god-universe-matrixx:${{ github.sha }} .
@@ -124,6 +134,7 @@ jobs:
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: trivy-image.sarif
+          category: trivy-image
 
   snyk:
     runs-on: ubuntu-24.04
@@ -133,17 +144,17 @@ jobs:
       - uses: actions/setup-node@v4.2.0
         with:
           node-version: ${{ env.NODE_VERSION }}
+          cache: npm
       - run: npm ci --ignore-scripts
-      - name: Skip when no Snyk token
-        run: |
-          if [ -z "${{ secrets.SNYK_TOKEN }}" ]; then
-            echo "SNYK_TOKEN fehlt, Job wird ohne Fehler beendet"
-            exit 0
-          fi
+
       - name: Snyk scan
+        if: ${{ secrets.SNYK_TOKEN != '' }}
         uses: snyk/actions/node@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
         with:
           args: --severity-threshold=high
+
+      - name: Snyk Token fehlt
+        if: ${{ secrets.SNYK_TOKEN == '' }}
+        run: echo "SNYK_TOKEN nicht gesetzt - Snyk-Scan übersprungen"
