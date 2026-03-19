@@ -35,7 +35,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
-    setupFiles: ['./projects/3d-ki-game-cloud/src/tests/vitest.setup.ts'],
-    exclude: ['node_modules', 'dist', 'deploy_hf/**', 'src/tests_backup/**'],
+    setupFiles: ['./src/tests/vitest.setup.ts'],
+    exclude: ['node_modules', 'dist', 'deploy_hf/**'],
   },
 })
