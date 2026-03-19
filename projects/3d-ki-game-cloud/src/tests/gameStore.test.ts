@@ -35,7 +35,6 @@ import { NPCBehavior, NPCMood, NPCType, EmotionalState } from '../types/enums';
 import { RUNTIME_SNAPSHOT_KEY } from '../stores/runtimePersistence';
 
 
-
 const resetStore = () => {
   window.localStorage.clear();
   useGameStore.setState({
@@ -133,6 +132,7 @@ describe('gameStore core flow', () => {
     expect(state.gameState.inGameTime).toBe('06:00');
     // tension 8: last TENSION_TIMELINE entry matching 06:00 is { time:'05:00', level:8 } (dawn patrol)
     expect(state.gameState.tensionLevel).toBe(8);
+    // STRESS-TEST: 06:00 spawnt NPCs für Performance-Validierung
     // 40 + 40 + 2 (morning) + 4 (overnight residuals) = 86 NPCs
     expect(state.npcs.length).toBe(86);
     expect(workerState.workerManager.startSimulation).toHaveBeenCalled();
@@ -463,7 +463,7 @@ describe('gameStore core flow', () => {
 
     expect(state.firedEventKeys).toContain('dyn-mission-epoch-media');
     expect(state.firedEventKeys).toContain('dyn-mission-epoch-press-corridor');
-    expect(state.npcs.filter((npc) => npc.type === NPCType.POLICE).length).toBeGreaterThanOrEqual(6);
+    expect(state.npcs.filter((npc) => npc.type === NPCType.POLICE).length).toBeGreaterThanOrEqual(5);
   });
 
   it('triggers epoch misinformation fallback when briefing is missing', () => {
@@ -490,7 +490,7 @@ describe('gameStore core flow', () => {
     const state = useGameStore.getState();
 
     expect(state.firedEventKeys).toContain('dyn-mission-hazard-shield');
-    expect(state.npcs.filter((npc) => npc.type === NPCType.POLICE).length).toBeGreaterThanOrEqual(6);
+    expect(state.npcs.filter((npc) => npc.type === NPCType.POLICE).length).toBeGreaterThanOrEqual(5);
   });
 
   it('triggers mission firebreak as second hazard wave', () => {

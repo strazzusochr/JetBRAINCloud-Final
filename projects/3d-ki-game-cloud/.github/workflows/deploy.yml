@@ -1,0 +1,34 @@
+name: Deploy to Cloudflare Pages
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  deployments: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Install dependencies 📦
+        run: npm install
+        
+      - name: Build project 🏗️
+        run: npm run build
+        
+      - name: Cloudflare Pages 🚀
+        uses: cloudflare/pages-action@1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: 3d-ki-game-cloud
+          directory: dist
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
