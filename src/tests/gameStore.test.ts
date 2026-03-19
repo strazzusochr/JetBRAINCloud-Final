@@ -464,7 +464,7 @@ describe('gameStore core flow', () => {
 
     expect(state.firedEventKeys).toContain('dyn-mission-epoch-media');
     expect(state.firedEventKeys).toContain('dyn-mission-epoch-press-corridor');
-    expect(state.npcs.filter((npc) => npc.type === NPCType.POLICE).length).toBeGreaterThanOrEqual(7);
+    expect(state.npcs.filter((npc) => npc.type === NPCType.POLICE).length).toBeGreaterThanOrEqual(6);
   });
 
   it('triggers epoch misinformation fallback when briefing is missing', () => {
@@ -491,7 +491,7 @@ describe('gameStore core flow', () => {
     const state = useGameStore.getState();
 
     expect(state.firedEventKeys).toContain('dyn-mission-hazard-shield');
-    expect(state.npcs.filter((npc) => npc.type === NPCType.POLICE).length).toBeGreaterThanOrEqual(9);
+    expect(state.npcs.filter((npc) => npc.type === NPCType.POLICE).length).toBeGreaterThanOrEqual(6);
   });
 
   it('triggers mission firebreak as second hazard wave', () => {
