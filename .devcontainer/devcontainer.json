@@ -28,6 +28,6 @@
       "onAutoForward": "notify"
     }
   },
-  "postCreateCommand": "npm install --prefer-offline --no-audit || true && npx puppeteer browsers install chrome || true",
+  "postCreateCommand": "npm install --prefer-offline --no-audit || true",
   "remoteUser": "node"
 }
