@@ -1,8 +1,11 @@
-# AAA JetBRAIN Cloud Engine Dockerfile
+# AAA JetBRAIN Cloud Engine Dockerfile (Optimized for Fast Cloud Build)
 FROM mcr.microsoft.com/devcontainers/javascript-node:20
 
-# Install Chromium/Puppeteer system dependencies (The "Root" Superpower)
-RUN apt-get update && apt-get install -y \
+# Force non-interactive for Debian/Ubuntu
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Update and install minimum required dependencies for headless chromium
+RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     fonts-liberation \
     libappindicator3-1 \
@@ -45,18 +48,18 @@ RUN apt-get update && apt-get install -y \
     xvfb \
     mesa-utils \
     libgles2-mesa \
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Set environment for Headless Rendering
 ENV DISPLAY=:99
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
 
-# Install Chrome stable manually to ensure compatibility
-RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
-    && sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list' \
+# Install Chrome stable with robust key handling to avoid GPG hang
+RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /usr/share/keyrings/google-chrome.gpg \
+    && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list \
     && apt-get update \
-    && apt-get install -y google-chrome-stable \
+    && apt-get install -y --no-install-recommends google-chrome-stable \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /workspace
