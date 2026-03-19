@@ -204,8 +204,8 @@ function resolveBrowserExecutablePath() {
     return fromEnv;
   }
 
-  if (process.platform === 'win32' && fs.existsSync(FALLBACK_BRAVE_PATH_WIN)) {
-    return FALLBACK_BRAVE_PATH_WIN;
+  if (process.platform === 'linux' && fs.existsSync('/usr/bin/google-chrome-stable')) {
+    return '/usr/bin/google-chrome-stable';
   }
 
   return undefined;
@@ -260,11 +260,12 @@ function getChromiumArgs(settings) {
     ];
   }
 
-  // 🚀 Hardware GPU Mode
-  console.log('🎮 Hardware-GPU-Modus: EGL WebGL aktiviert');
+  // 🚀 Hardware/EGL GPU Mode (Best for Cloud Containers)
+  console.log('🎮 EGL-Accelerated Mode: WebGL optimization active');
   return [
     '--enable-gpu',
     '--use-gl=egl',
+    '--disable-gpu-sandbox',
     '--enable-gpu-rasterization',
     '--enable-oop-rasterization',
     '--enable-features=CanvasOopRasterization,RawDraw',
@@ -1428,7 +1429,9 @@ function getClientHTML() {
     const ctx = fallbackCanvas.getContext('2d');
     let socketFramesActive = false;
 
+    let lastFrameTime = performance.now();
     socket.on('frame', (data) => {
+      const now = performance.now();
       const blob = new Blob([data], { type: 'image/jpeg' });
       const url = URL.createObjectURL(blob);
       const img = new Image();
@@ -1439,12 +1442,14 @@ function getClientHTML() {
         URL.revokeObjectURL(url);
         frameCount++;
         
-        // KERNFIX: Loading ausblenden sobald Frames ankommen!
+        const latency = Math.round(now - lastFrameTime);
+        lastFrameTime = now;
+
         if (!socketFramesActive) {
           socketFramesActive = true;
           loading.style.display = 'none';
-          video.style.display = 'none'; // WebRTC video nicht nötig
-          console.log('🎥 Socket.IO Frame-Stream aktiv! Black Screen behoben.');
+          video.style.display = 'none';
+          console.log('🎥 AAA Stream Active | Target: 60 FPS');
         }
       };
       img.src = url;

@@ -1,0 +1,29 @@
+{
+  "name": "JetBRAIN AAA Cloud Environment",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.shell.linux": "/bin/bash"
+      },
+      "extensions": [
+        "dbaeumer.vscode-eslint"
+      ]
+    }
+  },
+  "forwardPorts": [5173, 7860],
+  "portsAttributes": {
+    "5173": {
+      "label": "Frontend (Vite)",
+      "onAutoForward": "notify"
+    },
+    "7860": {
+      "label": "Stream Server",
+      "onAutoForward": "notify"
+    }
+  },
+  "postCreateCommand": "npm install && npx puppeteer browsers install chrome",
+  "remoteUser": "node"
+}
