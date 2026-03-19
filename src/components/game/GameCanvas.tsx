@@ -64,7 +64,7 @@ const SceneContent = () => {
                 position={sunPos}
                 intensity={sunIntensity}
                 castShadow={true}
-                shadow-mapSize={[2048, 2048]}
+                shadow-mapSize={[1024, 1024]}
                 shadow-camera-left={-100}
                 shadow-camera-right={100}
                 shadow-camera-top={100}
@@ -131,7 +131,7 @@ export const GameCanvas = () => {
             <Canvas
                 key={renderKey}
                 shadows={useShadows}
-                dpr={streamProfile === 'aaa' ? 1.5 : window.devicePixelRatio}
+                dpr={streamProfile === 'aaa' ? 1.25 : window.devicePixelRatio}
                 gl={{
                     antialias: useAntialias,
                     powerPreference: "high-performance",

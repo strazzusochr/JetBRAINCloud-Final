@@ -117,6 +117,8 @@ export const InstancedHumanoid = () => {
 
         const lodCounts = [0, 0, 0, 0, 0];
         let auraCount = 0;
+        let lod0Count = 0;
+        let lod1Count = 0;
 
         for (let i = 0; i < count; i++) {
             const npc = npcs[i];
@@ -130,14 +132,19 @@ export const InstancedHumanoid = () => {
 
             let lod: number;
             if (doLodUpdate) {
-                const dist = lodManager.calculateDistance([x, y, z], camera.position);
+                const dist = Math.sqrt((x - camera.position.x) ** 2 + (y - camera.position.y) ** 2 + (z - camera.position.z) ** 2);
                 lod = lodManager.getLODLevel(dist);
-                
-                lodCache.current[i] = lod;
             } else {
-                lod = lodCache.current[i] ?? 4;
+                lod = 0; // Standardmäßig LOD 0 für Testzwecke
             }
 
+            // High-Detail Budget Balancing
+            if (lod === 0) lod0Count++;
+            if (lod === 1) lod1Count++;
+
+            if (lod === 0 && lod0Count > 80) lod = 1;
+            if (lod === 1 && lod1Count > 150) lod = 2;
+            
             temp.position.set(x, y, z);
             temp.scale.set(1, 1, 1);
             temp.updateMatrix();
