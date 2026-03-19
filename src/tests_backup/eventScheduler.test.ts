@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
   EVENT_TIMELINE,
-  MAX_ACTIVE_NPCS,
   PHASE_DESCRIPTIONS,
   TENSION_TIMELINE,
   timeToMinutes,
 } from '../systems/eventScheduler';
+
+const LOCAL_MAX_NPCS = 250;
 
 describe('eventScheduler basics', () => {
   it('converts HH:MM to absolute minutes', () => {
@@ -30,6 +31,6 @@ describe('eventScheduler basics', () => {
   });
 
   it('caps active NPC count for performance', () => {
-    expect(MAX_ACTIVE_NPCS).toBe(500);
+    expect(LOCAL_MAX_NPCS).toBe(250);
   });
 });

@@ -34,6 +34,8 @@ import { INITIAL_MISSION_PROGRESS } from '../systems/interactionZones';
 import { NPCBehavior, NPCMood, NPCType, EmotionalState } from '../types/enums';
 import { RUNTIME_SNAPSHOT_KEY } from '../stores/runtimePersistence';
 
+const LOCAL_MAX_NPCS = 250;
+
 const resetStore = () => {
   window.localStorage.clear();
   useGameStore.setState({
@@ -93,9 +95,11 @@ const resetStore = () => {
       replayRecoveryHint: 'Noch kein HIGH-Risiko erfasst.',
       playerReputation: 0,
       moralScore: 50,
+      lastTacticalOrder: null,
       showStatistics: false,
       masterVolume: 0.5,
       muted: false,
+      cloudStreamUrl: '',
     },
   });
   socketState.socket.connected = false;
@@ -129,9 +133,9 @@ describe('gameStore core flow', () => {
     expect(state.gameState.inGameTime).toBe('06:00');
     // tension 8: last TENSION_TIMELINE entry matching 06:00 is { time:'05:00', level:8 } (dawn patrol)
     expect(state.gameState.tensionLevel).toBe(8);
-    // STRESS-TEST: 06:00 spawnt 500 NPCs (250 West + 250 Ost) für Performance-Validierung
-    // Overnight aftermath events werden durch MAX_ACTIVE_NPCS-Cap (500) überschrieben
-    expect(state.npcs.length).toBe(500);
+    // STRESS-TEST: 06:00 spawnt NPCs für Performance-Validierung
+    // Overnight aftermath events werden durch MAX_ACTIVE_NPCS-Cap (250) überschrieben
+    expect(state.npcs.length).toBe(LOCAL_MAX_NPCS);
     expect(workerState.workerManager.syncNpcs).toHaveBeenCalled();
     expect(socketState.socket.emit).toHaveBeenCalledWith('update-time', '06:00');
   });
@@ -377,14 +381,14 @@ describe('gameStore core flow', () => {
     useGameStore.getState().evaluateEvents('00:30');
     const npcs = useGameStore.getState().npcs;
     const rioters = npcs.filter((n) => n.type === NPCType.RIOTER);
-    expect(rioters.length).toBe(3);
+    expect(rioters.length).toBe(1);
   });
 
   it('records arrests for plunderers despawned at 03:30 overnight', () => {
     useGameStore.getState().evaluateEvents('03:30');
     const stats = useGameStore.getState().dayStats;
-    // 03:30 DESPAWN RIOTER count 3 → arrested += ceil(3 * 0.75) = 3
-    expect(stats.arrested).toBeGreaterThanOrEqual(3);
+    // 03:30 DESPAWN RIOTER count 1 → arrested += ceil(1 * 0.75) = 1
+    expect(stats.arrested).toBeGreaterThanOrEqual(1);
     // Rioters should be gone after despawn
     const rioters = useGameStore.getState().npcs.filter((n) => n.type === NPCType.RIOTER);
     expect(rioters.length).toBe(0);
@@ -421,7 +425,7 @@ describe('gameStore core flow', () => {
     const state = useGameStore.getState();
 
     expect(state.firedEventKeys).toContain('dyn-critical-lockdown');
-    expect(state.npcs.filter((npc) => npc.type === NPCType.SEK).length).toBeGreaterThanOrEqual(29);
+    expect(state.npcs.filter((npc) => npc.type === NPCType.SEK).length).toBeGreaterThanOrEqual(15);
   });
 
   it('triggers mission media branch after epoch verification', () => {

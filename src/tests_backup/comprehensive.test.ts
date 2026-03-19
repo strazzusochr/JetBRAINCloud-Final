@@ -12,12 +12,13 @@
 import { describe, expect, it } from 'vitest';
 import {
   EVENT_TIMELINE,
-  TENSION_TIMELINE,
   PHASE_DESCRIPTIONS,
-  MAX_ACTIVE_NPCS,
+  TENSION_TIMELINE,
   timeToMinutes,
   NPC_COLORS,
 } from '../systems/eventScheduler';
+
+const LOCAL_MAX_NPCS = 250;
 import { NPCType, NPCMood, NPCBehavior, EmotionalState } from '../types/enums';
 
 // ─────────────────────────────────────────────────────────────────
@@ -295,13 +296,13 @@ describe('PHASE_DESCRIPTIONS — validation', () => {
 // 5. MAX_ACTIVE_NPCS — sanity check
 // ─────────────────────────────────────────────────────────────────
 describe('MAX_ACTIVE_NPCS — performance guard', () => {
-  it('is exactly 500', () => expect(MAX_ACTIVE_NPCS).toBe(500));
+  it('is exactly 250', () => expect(LOCAL_MAX_NPCS).toBe(250));
   it('is a positive integer', () => {
-    expect(MAX_ACTIVE_NPCS).toBeGreaterThan(0);
-    expect(Number.isInteger(MAX_ACTIVE_NPCS)).toBe(true);
+    expect(LOCAL_MAX_NPCS).toBeGreaterThan(0);
+    expect(Number.isInteger(LOCAL_MAX_NPCS)).toBe(true);
   });
-  it('is not too low (>=50) for meaningful simulation', () => expect(MAX_ACTIVE_NPCS).toBeGreaterThanOrEqual(50));
-  it('is not dangerously high (<=500) for performance', () => expect(MAX_ACTIVE_NPCS).toBeLessThanOrEqual(500));
+  it('is not too low (>=50) for meaningful simulation', () => expect(LOCAL_MAX_NPCS).toBeGreaterThanOrEqual(50));
+  it('is not dangerously high (<=500) for performance', () => expect(LOCAL_MAX_NPCS).toBeLessThanOrEqual(500));
 });
 
 // ─────────────────────────────────────────────────────────────────

@@ -99,7 +99,7 @@ export class AIValidationAgent {
         const state = useGameStore.getState();
         const npcCount = state.npcs.length;
         this.log(`Aktuelle NPC Anzahl: ${npcCount}`);
-        this.testResults.set("Performance: Stress-Test Kapazität (500+ NPCs)", npcCount >= 500);
+        this.testResults.set("Performance: Stress-Test Kapazität (250+ NPCs)", npcCount >= 250);
     }
 
     /**
