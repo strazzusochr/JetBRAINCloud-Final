@@ -5,7 +5,7 @@
 # ══════════════════════════════════════════════════════════════
 
 # ---- Builder: Build Frontend Assets ----
-FROM node:22-bookworm-slim AS builder
+FROM node:25-bookworm-slim AS builder
 
 WORKDIR /app
 
@@ -24,7 +24,7 @@ RUN npm run build
 # Runtime: CPU + SwiftShader (WebGL via Software)
 # Modern Node 22 environment for better security and performance.
 # ════════════════════════════════════════════════════════════
-FROM node:22-bookworm-slim AS runner
+FROM node:25-bookworm-slim AS runner
 
 # Chromium + X11 Dependencies für Headless Rendering
 RUN apt-get update && apt-get install -y --no-install-recommends \
