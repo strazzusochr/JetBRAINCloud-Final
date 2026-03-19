@@ -92,6 +92,12 @@ jobs:
     needs: memory_log_validation
     steps:
       - uses: actions/checkout@v4.2.2
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          df -h
 
       - name: Install Trivy
         run: |
