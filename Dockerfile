@@ -1,7 +1,7 @@
 # ══════════════════════════════════════════════════════════════
 # ☁️ JETBRAIN CLOUD GAMING — ZERO LOCAL FOOTPRINT
 # Puppeteer + Chromium rendert Three.js auf dem Server
-# Video wird per WebRTC an den Browser gestreamt
+# Video wird per Socket.IO JPEG-Stream an den Browser gestreamt
 # ══════════════════════════════════════════════════════════════
 
 # ---- Builder: Build Frontend Assets ----
@@ -15,31 +15,21 @@ RUN npm ci --prefer-offline || npm install
 
 COPY . .
 
-# dist bereinigen
-RUN rm -rf dist dist/assets
-
 ENV NODE_ENV=production
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
 RUN npm run build
 
 # ════════════════════════════════════════════════════════════
-# Runtime: High-Performance GPU Architecture
+# Runtime: CPU + SwiftShader (WebGL via Software)
+# HuggingFace Free-Tier hat KEINE GPU — SwiftShader ist der
+# einzige Weg, Three.js in einer CPU-Docker-Umgebung zu rendern.
 # ════════════════════════════════════════════════════════════
-FROM nvidia/opengl:1.2-glvnd-runtime-ubuntu22.04 AS runner
+FROM node:18-slim AS runner
 
-# Environment for GPU passthrough
-ENV NVIDIA_VISIBLE_DEVICES all
-ENV NVIDIA_DRIVER_CAPABILITIES graphics,utility,display
-
-# Install Node.js 18 & Dependencies
+# Chromium + X11 Dependencies für Headless Rendering
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl \
-    gnupg \
-    && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
-    && apt-get install -y --no-install-recommends \
-    nodejs \
-    chromium-browser \
+    chromium \
     fonts-liberation \
     fonts-noto-color-emoji \
     libatk-bridge2.0-0 \
@@ -60,22 +50,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpangocairo-1.0-0 \
     libegl1-mesa \
     libgles2-mesa \
-    libvulkan1 \
-    mesa-vulkan-drivers \
-    xdg-utils \
     xvfb \
+    xdg-utils \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 ENV NODE_ENV=production
-ENV NODE_OPTIONS="--max-old-space-size=8192"
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 ENV PORT=7860
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+# ⚡ Software-Rendering (SwiftShader) — kein GPU nötig
+ENV RENDER_BACKEND=software
 ENV STREAM_PROFILE=low
 ENV HEADLESS_MODE=new
-ENV RENDER_BACKEND=hardware
 
 EXPOSE 7860
 
@@ -85,13 +74,10 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/server ./server
 
-# Hugging Face Spaces unterstützen nonroot Users
-# Hinweis: Für GPU-Zugriff in manchen Umgebungen ist root oder spezifische Group-Membership nötig.
-# Wir bleiben bei node, stellen aber sicher, dass die Pfade stimmen.
+# Hugging Face Spaces brauchen nonroot User
 USER root
 RUN chown -R 1000:1000 /app
 USER 1000
 
-# ☁️ Start Cloud-Gaming-Server (xvfb für virtuelles Display, Hardware Accelerated)
-CMD ["xvfb-run", "--server-args=-screen 0 1920x1080x24", "node", "server/stream-server.mjs"]
-
+# ☁️ Start: xvfb für virtuelles Display + SwiftShader WebGL
+CMD ["xvfb-run", "--server-args=-screen 0 1920x1080x24 -ac", "node", "server/stream-server.mjs"]

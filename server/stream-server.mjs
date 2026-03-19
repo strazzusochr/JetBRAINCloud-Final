@@ -244,24 +244,24 @@ function getChromiumArgs(settings) {
     '--password-store=basic',
     '--use-mock-keychain',
     '--force-device-scale-factor=1',
+    '--enable-webgl',
+    '--ignore-gpu-blocklist',
   ];
 
   if (RENDER_BACKEND === 'software') {
+    console.log('🖥️ Software-Rendering-Modus: SwiftShader WebGL aktiviert');
     return [
-      '--use-gl=egl',
+      '--use-gl=swiftshader',
       '--use-angle=swiftshader',
-      '--disable-gpu',
-      '--disable-software-rasterizer',
       ...commonArgs
     ];
   }
 
-  // 🚀 ULTRA Performance Mode: Hardware Accelerated WebGL
+  // 🚀 Hardware GPU Mode
+  console.log('🎮 Hardware-GPU-Modus: EGL WebGL aktiviert');
   return [
     '--enable-gpu',
-    '--ignore-gpu-blocklist',
-    '--enable-webgl',
-    '--use-gl=egl', // EGL is best for headless GPU passthrough
+    '--use-gl=egl',
     '--enable-gpu-rasterization',
     '--enable-oop-rasterization',
     '--enable-features=CanvasOopRasterization,RawDraw',
