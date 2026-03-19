@@ -95,7 +95,9 @@ jobs:
 
       - name: Install Trivy
         run: |
-          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.56.1
+          mkdir -p $HOME/bin
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b $HOME/bin v0.56.1
+          echo "$HOME/bin" >> $GITHUB_PATH
       - name: Trivy filesystem scan
         run: |
           trivy fs --exit-code 0 --severity HIGH,CRITICAL --format sarif --output trivy-fs.sarif .
