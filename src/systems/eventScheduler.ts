@@ -73,13 +73,13 @@ export const EVENT_TIMELINE: GameEvent[] = [
   // ✅ Sonnenaufgang-Shader aktiviert (Sky component)
   // ✅ Erste NPCs spawnen (Frühaufsteher, Jogger)
   {
-    time: '06:00', action: 'SPAWN', npcType: NPCType.CIVILIAN, count: 125, position: [-25, 0, 25], radius: 30,
-    description: 'STRESS-TEST: Großgruppe West (125 NPCs)', mood: NPCMood.PEACEFUL, behavior: NPCBehavior.WANDER,
+    time: '06:00', action: 'SPAWN', npcType: NPCType.CIVILIAN, count: 40, position: [-25, 0, 25], radius: 30,
+    description: 'STRESS-TEST: Gruppe West (40 NPCs)', mood: NPCMood.PEACEFUL, behavior: NPCBehavior.WANDER,
     phaseLabel: '🌅 Stress-Test Phase — Massive Spawn'
   },
   {
-    time: '06:00', action: 'SPAWN', npcType: NPCType.CIVILIAN, count: 125, position: [25, 0, 25], radius: 30,
-    description: 'STRESS-TEST: Großgruppe Ost (125 NPCs)', mood: NPCMood.PEACEFUL, behavior: NPCBehavior.WANDER
+    time: '06:00', action: 'SPAWN', npcType: NPCType.CIVILIAN, count: 40, position: [25, 0, 25], radius: 30,
+    description: 'STRESS-TEST: Gruppe Ost (40 NPCs)', mood: NPCMood.PEACEFUL, behavior: NPCBehavior.WANDER
   },
   // 5 Polizisten spawnen (Patrouille-Route)
   {

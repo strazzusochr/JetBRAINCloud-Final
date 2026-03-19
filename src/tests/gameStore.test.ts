@@ -133,9 +133,8 @@ describe('gameStore core flow', () => {
     expect(state.gameState.inGameTime).toBe('06:00');
     // tension 8: last TENSION_TIMELINE entry matching 06:00 is { time:'05:00', level:8 } (dawn patrol)
     expect(state.gameState.tensionLevel).toBe(8);
-    // STRESS-TEST: 06:00 spawnt NPCs für Performance-Validierung
-    // Synchronisiert mit Root-Engine (86 NPCs)
-    expect(state.npcs.length).toBe(86);
+    // 40 + 40 + 2 = 82 NPCs laut eventScheduler.ts
+    expect(state.npcs.length).toBe(82);
     expect(workerState.workerManager.syncNpcs).toHaveBeenCalled();
     expect(socketState.socket.emit).toHaveBeenCalledWith('update-time', '06:00');
   });
