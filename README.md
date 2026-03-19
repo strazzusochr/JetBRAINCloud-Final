@@ -1,32 +1,64 @@
----
-title: JetBRAIN
-emoji: 🧠
-colorFrom: blue
-colorTo: indigo
-sdk: docker
-app_port: 7860
-pinned: true
-license: mit
-python_version: "3.10"
-gpu: any
----
+# 🌌 JetBRAIN: Zero-Footprint AAA Cloud Engine
 
-# 🎯 JetBRAIN — Corona Control Ultimate (Cloud Gaming)
-
-Eine Hyper-AAA 3D Polizei-Simulation, die vollständig in der Cloud (Huggingface Spaces) gehostet wird.
-**ZERO lokale GPU/CPU/Festplatte** — Alles rendert auf dem Server via WebRTC.
-
-## ☁️ Zero-Footprint Architektur
-- **Backend:** Node.js + Puppeteer (Cloud-Rendering)
-- **Frontend:** React 19 / Three.js (WebGPU-Fokus)
-- **Streaming:** WebRTC @ 1080p / 60 FPS
-- **Deployment:** Docker auf Huggingface Spaces
-- **Profil:** AAA (1920x1080, JPEG 85%, 60 FPS)
-
-## 🛠️ Entwicklung & CI/CD
-- **GitHub:** [https://github.com/strazzusochr/JetBRAIN](https://github.com/strazzusochr/JetBRAIN)
-- **GitLab:** [https://gitlab.com/strazzusochr/jetbrain](https://gitlab.com/strazzusochr/jetbrain)
+Welcome to the **JetBRAIN Cloud** repository. This project is a cutting-edge 3D web application designed to run entirely in the cloud with **zero local hardware footprint** (No local WebGL/GPU usage).
 
 ---
-> [!NOTE]
-> Dieses Projekt nutzt Cloud-Rendering (Puppeteer/Chromium) zum Schutz lokaler Hardware (Zero-Footprint-Prinzip).
+
+## 🏗️ Project Architecture & Concept
+
+- **Frontend**: A high-performance React application utilizing **Three.js** for 3D rendering.
+- **Backend (Stream Server)**: A Node.js environment that launches a headless Chromium instance via **Puppeteer**.
+- **The Magic**: The game is rendered on the server. A high-speed **CDP (Chrome DevTools Protocol) Screencast** captures the frames at up to 60 FPS and streams them via **Socket.IO** to the client's `<canvas>`.
+- **AAA Graphics**: Optimized for 1080p60 streaming with server-side EGL/Hardware acceleration.
+
+---
+
+## 📂 Folder Structure
+
+- **`/server`**: Contains `stream-server.mjs`. This is the core engine that manages the browser instance and video streaming.
+- **`/projects/3d-ki-game-cloud`**: The main frontend React/Vite project.
+  - `/src`: Components (`HUD.tsx`, `GameCanvas.tsx`), Systems, and Stores (`gameStore.ts`).
+  - `/public`: Static assets including proxy compatibility patches (`theme.css`, `index.css`).
+- **`/.devcontainer`**: Crucial Docker infrastructure. Pre-installs 40+ Linux libraries required for headless Chromium.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Core**: TypeScript, React, Vite.
+- **3D**: Three.js (Procedural Mesh System, LOD Management).
+- **Socket**: Socket.IO (Low-latency frame & input transmission).
+- **Automation**: Puppeteer (Headless Browser Management).
+- **Styling**: Vanilla CSS (Modern Aesthetics).
+
+---
+
+## 🚀 How to Start
+
+### 1. In Codeanywhere (Recommended)
+The project includes a **Dev Container**. 
+- Simply open the repository and select **"Rebuild and Reopen in Container"**.
+- All dependencies (Chromium, Node, Libs) will be installed automatically.
+
+### 2. Manual Start
+```bash
+# Terminal 1: Frontend
+cd projects/3d-ki-game-cloud
+npm install
+npm run dev
+
+# Terminal 2: Stream Server (The Engine)
+node server/stream-server.mjs
+```
+
+---
+
+## ⚠️ Known Issues & Fixes (For the incoming Coder)
+
+- **400 Bad Request**: Fixed by adding placeholder `theme.css` and `index.css` in `/public`.
+- **HMR Blocking**: Proxy settings in `vite.config.ts` are set to `allowedHosts: true` and `clientPort: 443`.
+- **Missing Libs**: Dockerfile in `.devcontainer` handles `libatk`, `libgbm`, etc.
+
+---
+
+**Mission Goal:** Maintain 1080p60 FPS with < 50ms latency for a true AAA experience.
