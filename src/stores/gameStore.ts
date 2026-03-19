@@ -20,9 +20,18 @@ declare global {
 
 export const isRenderer = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('renderer') === 'true';
 export const streamProfile = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('profile') || 'medium' : 'medium';
-const socketUrl = isRenderer 
-    ? (window.location.protocol + '//' + window.location.hostname + ':7860') 
-    : (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
+// FIX: Immer Port 7860 erzwingen.
+// Lokal (localhost/127.0.0.1): Vite läuft auf 5173/3000, Socket-Server auf 7860 → expliziter Port nötig.
+// Codeanywhere/Cloud-Proxy: externer Port 443 → intern 7860, origin enthält keinen expliziten Port → window.location.origin reicht.
+function resolveSocketUrl(): string {
+    if (typeof window === 'undefined') return 'http://localhost:7860';
+    const { protocol, hostname } = window.location;
+    const isLocal = hostname === 'localhost' || hostname === '127.0.0.1';
+    if (isLocal) return `${protocol}//${hostname}:7860`;
+    // Cloud (Codeanywhere, Railway, HF …): Proxy leitet externen Port → 7860 intern weiter
+    return window.location.origin;
+}
+const socketUrl = resolveSocketUrl();
 
 const socket = io(socketUrl, { 
     autoConnect: false,
@@ -1400,7 +1409,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
         history: [],
     },
     gameState: { 
-        cloudStreamUrl: 'https://strazzusochr-jetbrainclo-7x393ju171.app.codeanywhere.com/',
+        cloudStreamUrl: (typeof window !== 'undefined' && window.location.hostname.includes('app.codeanywhere.com'))
+            ? `https://7860-${window.location.hostname.replace(/^(3000|5173|7860)-/, '')}`
+            : (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:7860'),
         isPlaying: false, isTimePaused: false, inGameTime: persistedInGameTime,
         tensionLevel: getTensionLevelForMinutes(timeToMinutes(persistedInGameTime)),
         timeSpeed: persistedRuntimeSnapshot?.timeSpeed ?? RUNTIME_DEFAULTS.timeSpeed,

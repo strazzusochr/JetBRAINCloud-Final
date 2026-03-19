@@ -24,7 +24,7 @@ const app = express();
 const httpServer = createServer(app);
 
 function parseAllowedOrigins(raw) {
-  return String(raw || 'http://127.0.0.1:3001,http://localhost:3001,http://127.0.0.1:7860,http://localhost:7860,https://strazzusochr-jetbrainclo-7x393ju171.app.codeanywhere.com,https://huggingface.co')
+  return String(raw || 'http://127.0.0.1:3001,http://localhost:3001,http://127.0.0.1:7860,http://localhost:7860')
     .split(',')
     .map((value) => value.trim())
     .filter(Boolean);
@@ -42,12 +42,10 @@ const ALLOWED_COMPUTE_HOSTS = new Set(
 );
 
 function isAllowedOrigin(origin) {
-  if (!origin) return true;
-  // In Docker/HF: viewer is served from same origin — always allow
-  if (origin.includes('huggingface.co') || origin.includes('.hf.space')) return true;
-  // Also allow the internal renderer port
-  if (origin.includes(`127.0.0.1:${internalPort}`) || origin.includes(`localhost:${internalPort}`)) return true;
-  return ALLOWED_ORIGINS.includes(origin);
+    if (!origin) return true;
+    if (origin.includes('.app.codeanywhere.com')) return true;
+    // We allow localhost and the dynamic cloud origin
+    return ALLOWED_ORIGINS.some(allowed => origin.includes(allowed) || allowed === '*');
 }
 
 const io = new Server(httpServer, {

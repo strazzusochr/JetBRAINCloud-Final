@@ -7,7 +7,12 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 function parseAllowedOrigins(raw) {
-    return String(raw || 'http://127.0.0.1:3001,http://localhost:3001,http://127.0.0.1:7860,http://localhost:7860')
+    const defaults = [
+        'http://127.0.0.1:3001', 'http://localhost:3001',
+        'http://127.0.0.1:7860', 'http://localhost:7860',
+        'http://127.0.0.1:5173', 'http://localhost:5173'
+    ];
+    return String(raw || defaults.join(','))
         .split(',')
         .map((value) => value.trim())
         .filter(Boolean);
@@ -18,6 +23,8 @@ const WS_SHARED_TOKEN = String(process.env.WS_SHARED_TOKEN || '');
 
 function isAllowedOrigin(origin) {
     if (!origin) return true;
+    // Codeanywhere Wildcard: alle Subdomains erlauben
+    if (origin.includes('.app.codeanywhere.com')) return true;
     return ALLOWED_ORIGINS.includes(origin);
 }
 
