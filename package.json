@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vite",
     "dev:all": "concurrently \"npm run dev\" \"node server/server.js\" --names \"vite,socket\" --prefix-colors \"cyan,yellow\"",
+    "cloud": "node scripts/cloud-boot.mjs",
     "dev:all:safe": "node scripts/dev-all-safe.mjs",
     "prestream": "node scripts/security/port-check.mjs --mode=stream && node scripts/security/resource-guard.mjs",
     "preautonomy:proof": "node scripts/security/port-check.mjs --mode=autonomy && node scripts/security/resource-guard.mjs",
