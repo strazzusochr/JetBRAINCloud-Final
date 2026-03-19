@@ -148,13 +148,11 @@ jobs:
       - run: npm ci --ignore-scripts
 
       - name: Snyk scan
-        if: ${{ secrets.SNYK_TOKEN != '' }}
-        uses: snyk/actions/node@master
+        run: |
+          if [ -z "$SNYK_TOKEN" ]; then
+            echo "SNYK_TOKEN nicht gesetzt - Snyk-Scan übersprungen"
+            exit 0
+          fi
+          npx snyk test --severity-threshold=high
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          args: --severity-threshold=high
-
-      - name: Snyk Token fehlt
-        if: ${{ secrets.SNYK_TOKEN == '' }}
-        run: echo "SNYK_TOKEN nicht gesetzt - Snyk-Scan übersprungen"
